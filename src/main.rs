@@ -26,12 +26,12 @@ fn main() -> Result<()> {
     };
     let mut buffer = String::new();
     let byte_count = io::stdin().read_to_string(&mut buffer)?;
-    if flag_options.count_bytes {
-        print!("\t{byte_count}");
-    }
     let line_count = buffer.lines().count();
     if flag_options.count_lines {
-        print!("\t{line_count}");
+        print!("{line_count:>8}");
+    }
+    if flag_options.count_bytes {
+        print!("{byte_count:>8}");
     }
     println!();
     Ok(())
