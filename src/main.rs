@@ -4,6 +4,7 @@ use std::{env, io};
 struct FlagOptions {
     count_lines: bool,
     count_bytes: bool,
+    count_words: bool,
 }
 
 impl FlagOptions {
@@ -11,6 +12,7 @@ impl FlagOptions {
         FlagOptions {
             count_lines: false,
             count_bytes: false,
+            count_words: false,
         }
     }
 }
@@ -27,8 +29,17 @@ fn main() -> Result<()> {
     let mut buffer = String::new();
     let byte_count = io::stdin().read_to_string(&mut buffer)?;
     let line_count = buffer.lines().count();
+    let word_count = buffer
+        .replace('\n', " ")
+        .split(' ')
+        .map(|w| w.trim())
+        .filter(|w| w != &"")
+        .count();
     if flag_options.count_lines {
         print!("{line_count:>8}");
+    }
+    if flag_options.count_words {
+        print!("{word_count:>8}");
     }
     if flag_options.count_bytes {
         print!("{byte_count:>8}");
@@ -44,6 +55,7 @@ fn parse_args(args: Vec<String>) -> Result<FlagOptions> {
         match arg.as_str() {
             "-c" => flag_options.count_bytes = true,
             "-l" => flag_options.count_lines = true,
+            "-w" => flag_options.count_words = true,
             _ => {
                 return Err(std::io::Error::new(
                     io::ErrorKind::InvalidInput,
