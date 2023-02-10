@@ -50,19 +50,26 @@ fn main() -> Result<()> {
 
 fn parse_args(args: Vec<String>) -> Result<FlagOptions> {
     let mut flag_options = FlagOptions::new();
-
-    for arg in args.iter().skip(1) {
-        match arg.as_str() {
-            "-c" => flag_options.count_bytes = true,
-            "-l" => flag_options.count_lines = true,
-            "-w" => flag_options.count_words = true,
-            _ => {
-                return Err(std::io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    format!("Unrecognized Argument: {arg}"),
-                ))
+    if args.len() > 1 {
+        for arg in args.iter().skip(1) {
+            match arg.as_str() {
+                "-c" => flag_options.count_bytes = true,
+                "-l" => flag_options.count_lines = true,
+                "-w" => flag_options.count_words = true,
+                _ => {
+                    return Err(std::io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        format!("Unrecognized Argument: {arg}"),
+                    ))
+                }
             }
         }
+    } else {
+        flag_options = FlagOptions {
+            count_lines: true,
+            count_bytes: true,
+            count_words: true,
+        };
     }
     Ok(flag_options)
 }
