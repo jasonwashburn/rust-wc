@@ -30,6 +30,28 @@ impl RunConfig {
     }
 }
 
+struct Counts {
+    byte_count: usize,
+    word_count: usize,
+    line_count: usize,
+}
+
+impl Counts {
+    fn new() -> Self {
+        Self {
+            byte_count: 0,
+            word_count: 0,
+            line_count: 0,
+        }
+    }
+
+    fn update(&mut self, other: Counts) {
+        self.byte_count += other.byte_count;
+        self.word_count += other.word_count;
+        self.line_count += other.line_count;
+    }
+}
+
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     let mut buffer = String::new();
@@ -46,29 +68,47 @@ fn main() -> Result<()> {
         count_and_output(buffer, &run_config);
         println!();
     } else {
+        let mut counts = Counts::new();
         for file in &run_config.files {
             let buffer = fs::read_to_string(file)?;
-            count_and_output(buffer, &run_config);
+            let new_counts = count_and_output(buffer, &run_config);
+            counts.update(new_counts);
             print!(" {file}");
             println!();
         }
+        print_totals(&run_config, counts);
     }
     Ok(())
 }
 
-fn count_and_output(buffer: String, run_config: &RunConfig) {
-    let byte_count = buffer.len();
-    let line_count = buffer.lines().count();
-    let word_count = buffer.replace('\n', " ").split_whitespace().count();
+fn count_and_output(buffer: String, run_config: &RunConfig) -> Counts {
+    let mut counts = Counts::new();
     if run_config.count_lines {
-        print!("{line_count:>8}");
+        counts.line_count = buffer.lines().count();
+        print!("{:>8}", counts.line_count);
     }
     if run_config.count_words {
-        print!("{word_count:>8}");
+        counts.word_count = buffer.replace('\n', " ").split_whitespace().count();
+        print!("{:>8}", counts.word_count);
     }
     if run_config.count_bytes {
-        print!("{byte_count:>8}");
+        counts.byte_count = buffer.len();
+        print!("{:>8}", counts.byte_count);
     }
+    counts
+}
+
+fn print_totals(run_config: &RunConfig, counts: Counts) {
+    if run_config.count_lines {
+        print!("{:>8}", counts.line_count);
+    }
+    if run_config.count_words {
+        print!("{:>8}", counts.word_count);
+    }
+    if run_config.count_bytes {
+        print!("{:>8}", counts.byte_count);
+    }
+    println!(" total")
 }
 
 fn parse_args(args: Vec<String>) -> Result<RunConfig> {
