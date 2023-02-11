@@ -60,6 +60,7 @@ fn main() -> Result<()> {
         Ok(x) => x,
         Err(e) => {
             println!("{e}");
+            print_usage();
             std::process::exit(1);
         }
     };
@@ -139,6 +140,10 @@ fn parse_args(args: Vec<String>) -> Result<RunConfig> {
     Ok(run_config)
 }
 
+fn print_usage() {
+    println!("usage: wc [-clmw] [file ...]");
+}
+
 fn parse_flags(flag_chars: &str) -> Result<RunConfig> {
     let mut flag_options = RunConfig::new();
     for character in flag_chars.chars() {
@@ -149,7 +154,7 @@ fn parse_flags(flag_chars: &str) -> Result<RunConfig> {
             _ => {
                 return Err(std::io::Error::new(
                     io::ErrorKind::InvalidInput,
-                    format!("Unrecognized Argument: {character}"),
+                    format!("wc: illegal option -- {character}"),
                 ))
             }
         }
