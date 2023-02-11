@@ -1,5 +1,5 @@
 use std::io::{Read, Result};
-use std::{env, io};
+use std::{env, fs, io};
 
 #[derive(Default)]
 struct RunConfig {
@@ -18,6 +18,16 @@ impl RunConfig {
             ..Default::default()
         }
     }
+
+    fn no_flags_set(&self) -> bool {
+        !self.count_bytes && !self.count_lines && !self.count_words
+    }
+
+    fn set_all_flags(&mut self, setting: bool) {
+        self.count_words = setting;
+        self.count_lines = setting;
+        self.count_bytes = setting;
+    }
 }
 
 fn main() -> Result<()> {
@@ -31,9 +41,23 @@ fn main() -> Result<()> {
             std::process::exit(1);
         }
     };
-    dbg!(&run_config.files);
-    let byte_count = io::stdin().read_to_string(&mut buffer)?;
+    if run_config.files.is_empty() {
+        io::stdin().read_to_string(&mut buffer)?;
+        count_and_output(buffer, &run_config);
+        println!();
+    } else {
+        for file in &run_config.files {
+            let buffer = fs::read_to_string(file)?;
+            count_and_output(buffer, &run_config);
+            print!(" {file}");
+            println!();
+        }
+    }
+    Ok(())
+}
 
+fn count_and_output(buffer: String, run_config: &RunConfig) {
+    let byte_count = buffer.len();
     let line_count = buffer.lines().count();
     let word_count = buffer.replace('\n', " ").split_whitespace().count();
     if run_config.count_lines {
@@ -45,8 +69,6 @@ fn main() -> Result<()> {
     if run_config.count_bytes {
         print!("{byte_count:>8}");
     }
-    println!();
-    Ok(())
 }
 
 fn parse_args(args: Vec<String>) -> Result<RunConfig> {
@@ -63,14 +85,11 @@ fn parse_args(args: Vec<String>) -> Result<RunConfig> {
                 run_config.files.push(arg.to_owned());
             }
         }
-        dbg!(&run_config.files);
+        if run_config.no_flags_set() {
+            run_config.set_all_flags(true);
+        }
     } else {
-        run_config = RunConfig {
-            count_lines: true,
-            count_bytes: true,
-            count_words: true,
-            ..Default::default()
-        };
+        run_config.set_all_flags(true);
     }
     Ok(run_config)
 }
