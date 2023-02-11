@@ -70,11 +70,16 @@ fn main() -> Result<()> {
     } else {
         let mut counts = Counts::new();
         for file in &run_config.files {
-            let buffer = fs::read_to_string(file)?;
-            let new_counts = count_and_output(buffer, &run_config);
-            counts.update(new_counts);
-            print!(" {file}");
-            println!();
+            match fs::read_to_string(file) {
+                Ok(s) => {
+                    let buffer = s;
+                    let new_counts = count_and_output(buffer, &run_config);
+                    counts.update(new_counts);
+                    print!(" {file}");
+                    println!();
+                }
+                Err(e) => println!("wc: {file}: read: {e}"),
+            }
         }
         print_totals(&run_config, counts);
     }
